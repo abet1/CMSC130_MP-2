@@ -80,18 +80,36 @@ public class Main {
         presentStates.clear();
         nextStates.clear();
         flipFlopInputs.clear();
-        System.out.println("Enter rows. Type 'done' as present state to finish input.");
+        
+        System.out.println("Enter flip-flop inputs. Type 'done' to finish input.");
+        
+        // Start with all zeros as initial state
+        String currentState = "0".repeat(numVars);
+        
         while (true) {
-            String present = getBinaryInput("Present state (" + numVars + " bits): ", numVars);
-            if (present.equalsIgnoreCase("done")) break;
-            String ffInput;
+            // Get flip-flop input from user
             int ffBits = (flipFlopType == 1 || flipFlopType == 3) ? numVars * 2 : numVars;
-            ffInput = getBinaryInput("Flip-flop input (" + ffBits + " bits): ", ffBits);
-            presentStates.add(present);
+            String ffInput = getBinaryInput("Flip-flop input for state " + currentState + " (" + ffBits + " bits): ", ffBits);
+            
+            if (ffInput.equalsIgnoreCase("done")) {
+                break;
+            }
+            
+            // Add current state and input
+            presentStates.add(currentState);
             flipFlopInputs.add(ffInput);
+            
             // Calculate next state for this row
-            String next = calcNextState(flipFlopType, present, ffInput, numVars);
+            String next = calcNextState(flipFlopType, currentState, ffInput, numVars);
             nextStates.add(next);
+            
+            // Print the table after each input
+            System.out.println("\nCurrent State Table:");
+            printTable(flipFlopType, numVars);
+            System.out.println(); // Add a blank line for better readability
+            
+            // Use the next state as the present state for next iteration
+            currentState = next;
         }
     }
 

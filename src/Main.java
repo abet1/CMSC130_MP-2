@@ -2,17 +2,39 @@ import java.util.*;
 
 /**
  * Main.java
- * Entry point for the Flip-Flop Simulator.
- * This class handles the menu selection, user input, and simulation logic for different flip-flop types.
+ * A Flip-Flop Simulator that demonstrates the behavior of different types of flip-flops:
+ * - RS Flip-Flop
+ * - D Flip-Flop
+ * - JK Flip-Flop
+ * - T Flip-Flop
+ * 
+ * The program allows users to:
+ * 1. Select a flip-flop type
+ * 2. Specify the number of variables (1-3)
+ * 3. Input binary values for the flip-flop
+ * 4. View the state transition table
+ * 
+ * @author CODERZZZ
  */
 public class Main {
+    // Scanner object for reading user input
     private static Scanner scanner = new Scanner(System.in);
 
-    // Data for the table
-    private static List<String> presentStates = new ArrayList<>();
-    private static List<String> nextStates = new ArrayList<>();
-    private static List<String> flipFlopInputs = new ArrayList<>();
+    // Lists to store the state transition table data
+    private static List<String> presentStates = new ArrayList<>();  // Current states
+    private static List<String> nextStates = new ArrayList<>();     // Next states
+    private static List<String> flipFlopInputs = new ArrayList<>(); // Input values
 
+    /**
+     * Main entry point of the program.
+     * Implements the main program loop that:
+     * 1. Displays the menu
+     * 2. Gets user input
+     * 3. Processes the flip-flop simulation
+     * 4. Displays results
+     * 
+     * @param args Command line arguments (not used)
+     */
     public static void main(String[] args) {
         while (true) {
             int flipFlopType = displayMenuAndGetChoice();
@@ -31,7 +53,12 @@ public class Main {
         scanner.close();
     }
 
-    // Display menu and get flip-flop type
+    /**
+     * Displays the main menu and gets the user's choice of flip-flop type.
+     * Validates input to ensure it's a number between 1 and 5.
+     * 
+     * @return int representing the selected flip-flop type (1-4) or exit (5)
+     */
     private static int displayMenuAndGetChoice() {
         System.out.println("\n--- Flip-Flop Simulator ---");
         System.out.println("1. RS Flip-Flop");
@@ -53,7 +80,12 @@ public class Main {
         return choice;
     }
 
-    // Ask for number of variables (1-3)
+    /**
+     * Prompts the user to enter the number of variables for the flip-flop.
+     * Validates input to ensure it's a number between 1 and 3, or 0 to exit.
+     * 
+     * @return int representing the number of variables (1-3) or 0 to exit
+     */
     private static int getNumVariables() {
         int n;
         do {
@@ -75,7 +107,16 @@ public class Main {
         } while (true);
     }
 
-    // Get all table rows from user
+    /**
+     * Collects the state transition table data from user input.
+     * For each state:
+     * 1. Gets the flip-flop input
+     * 2. Calculates the next state
+     * 3. Updates the table
+     * 
+     * @param flipFlopType The type of flip-flop (1-4)
+     * @param numVars Number of variables in the flip-flop (1-3)
+     */
     private static void getTableRows(int flipFlopType, int numVars) {
         presentStates.clear();
         nextStates.clear();
@@ -89,7 +130,7 @@ public class Main {
         while (true) {
             // Get flip-flop input from user
             int ffBits = (flipFlopType == 1 || flipFlopType == 3) ? numVars * 2 : numVars;
-            String ffInput = getBinaryInput("Flip-flop input for state " + currentState + " (" + ffBits + " bits): ", ffBits);
+            String ffInput = getBinaryInput("Flip-flop input for state " + currentState + " (" + ffBits + " bits): " + "(or type done to exit)", ffBits);
             
             if (ffInput.equalsIgnoreCase("done")) {
                 break;
@@ -113,7 +154,14 @@ public class Main {
         }
     }
 
-    // Get a binary string input of required length
+    /**
+     * Gets and validates binary input from the user.
+     * Ensures the input is the correct length and contains only 0s and 1s.
+     * 
+     * @param prompt The prompt message to display
+     * @param length The required length of the binary input
+     * @return String containing the valid binary input or "done"
+     */
     private static String getBinaryInput(String prompt, int length) {
         while (true) {
             System.out.print(prompt);
@@ -124,7 +172,20 @@ public class Main {
         }
     }
 
-    // Calculate next state for a row, given flip-flop type, present state, and flip-flop input
+    /**
+     * Calculates the next state based on the flip-flop type, current state, and input.
+     * Implements the logic for each type of flip-flop:
+     * - RS: Reset-Set logic with invalid state handling
+     * - D: Direct input copying
+     * - JK: Toggle logic with hold state
+     * - T: Toggle based on input
+     * 
+     * @param type The type of flip-flop (1-4)
+     * @param present Current state of the flip-flop
+     * @param ffInput Input to the flip-flop
+     * @param n Number of variables
+     * @return String representing the next state
+     */
     private static String calcNextState(int type, String present, String ffInput, int n) {
         StringBuilder next = new StringBuilder();
         for (int i = 0; i < n; i++) {
@@ -158,7 +219,16 @@ public class Main {
         return next.toString();
     }
 
-    // Print the table in the required format
+    /**
+     * Prints the state transition table in a formatted manner.
+     * The table includes:
+     * - Present state
+     * - Next state
+     * - Flip-flop inputs
+     * 
+     * @param flipFlopType The type of flip-flop (1-4)
+     * @param numVars Number of variables in the flip-flop (1-3)
+     */
     private static void printTable(int flipFlopType, int numVars) {
         // Fixed column widths for consistency
         int stateColWidth = 20;  // Fixed width for state columns

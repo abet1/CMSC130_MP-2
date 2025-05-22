@@ -21,6 +21,10 @@ public class Main {
                 break;
             }
             int numVars = getNumVariables();
+            if (numVars == 0) {
+                System.out.println("Going back to menu. Goodbye!");
+                continue;
+            }
             getTableRows(flipFlopType, numVars);
             printTable(flipFlopType, numVars);
         }
@@ -53,14 +57,22 @@ public class Main {
     private static int getNumVariables() {
         int n;
         do {
-            System.out.print("Enter the number of variables (1 to 3): ");
-            while (!scanner.hasNextInt()) {
-                System.out.println("Invalid input. Please enter a number.");
+            System.out.print("Enter the number of variables (1 to 3) 0 to exit: ");
+            if(scanner.hasNextInt()) {
+                n = scanner.nextInt();
+                if(n==1 || n==2 || n==3) {
+                    return n;
+                } else if (n==0) {
+                    return 0;
+                }else {
+                    System.out.println("Invalid input. Please enter a number from 1 to 3: ");
+                }
+            }
+            else{
+                System.out.println("Invalid input. Please enter a valid integer from 1 to 3: ");
                 scanner.next();
             }
-            n = scanner.nextInt();
-        } while (n < 1 || n > 3);
-        return n;
+        } while (true);
     }
 
     // Get all table rows from user
@@ -130,10 +142,9 @@ public class Main {
 
     // Print the table in the required format
     private static void printTable(int flipFlopType, int numVars) {
-        // Calculate column widths
-        int stateColWidth = numVars * 3 + 2; // 3 chars per bit + 2 for padding
-        int inputBits = (flipFlopType == 1 || flipFlopType == 3) ? numVars * 2 : numVars;
-        int inputColWidth = inputBits * 3 + 2;
+        // Fixed column widths for consistency
+        int stateColWidth = 20;  // Fixed width for state columns
+        int inputColWidth = 30;  // Fixed width for input column
 
         String sep = "+" + "-".repeat(stateColWidth) + "+" + "-".repeat(stateColWidth) + "+" + "-".repeat(inputColWidth) + "+";
 

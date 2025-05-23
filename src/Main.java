@@ -1,4 +1,7 @@
 import java.util.*;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Main.java
@@ -19,6 +22,8 @@ import java.util.*;
 public class Main {
     // Scanner object for reading user input
     private static Scanner scanner = new Scanner(System.in);
+    private static Timer timer = new Timer();
+    private static AtomicReference<String> currentInput = new AtomicReference<>("");
 
     // Lists to store the state transition table data
     private static List<String> presentStates = new ArrayList<>();  // Current states
@@ -32,25 +37,27 @@ public class Main {
      * 2. Gets user input
      * 3. Processes the flip-flop simulation
      * 4. Displays results
-     * 
-     * @param args Command line arguments (not used)
      */
     public static void main(String[] args) {
-        while (true) {
-            int flipFlopType = displayMenuAndGetChoice();
-            if (flipFlopType == 5) {
-                System.out.println("Exiting program. Goodbye!");
-                break;
+        try {
+            while (true) {
+                int flipFlopType = displayMenuAndGetChoice();
+                if (flipFlopType == 5) {
+                    System.out.println("Exiting program. Goodbye!");
+                    break;
+                }
+                int numVars = getNumVariables();
+                if (numVars == 0) {
+                    System.out.println("Going back to menu. Goodbye!");
+                    continue;
+                }
+                getTableRows(flipFlopType, numVars);
+                printTable(flipFlopType, numVars);
             }
-            int numVars = getNumVariables();
-            if (numVars == 0) {
-                System.out.println("Going back to menu. Goodbye!");
-                continue;
-            }
-            getTableRows(flipFlopType, numVars);
-            printTable(flipFlopType, numVars);
+        } finally {
+            timer.cancel();
+            scanner.close();
         }
-        scanner.close();
     }
 
     /**
@@ -130,7 +137,7 @@ public class Main {
         while (true) {
             // Get flip-flop input from user
             int ffBits = (flipFlopType == 1 || flipFlopType == 3) ? numVars * 2 : numVars;
-            String ffInput = getBinaryInput("Flip-flop input for state " + currentState + " (" + ffBits + " bits): " + "(or type done to exit)", ffBits);
+            String ffInput = getBinaryInput("Flip-flop input for state " + currentState + " (" + ffBits + " bits): " + "(or type done to exit): ", ffBits, flipFlopType);
             
             if (ffInput.equalsIgnoreCase("done")) {
                 break;
@@ -156,18 +163,55 @@ public class Main {
 
     /**
      * Gets and validates binary input from the user.
-     * Ensures the input is the correct length and contains only 0s and 1s.
+     * For RS and JK flip-flops, automatically resets input to 0 after 10 seconds.
      * 
      * @param prompt The prompt message to display
      * @param length The required length of the binary input
+     * @param flipFlopType The type of flip-flop (1-4)
      * @return String containing the valid binary input or "done"
      */
-    private static String getBinaryInput(String prompt, int length) {
+    private static String getBinaryInput(String prompt, int length, int flipFlopType) {
         while (true) {
             System.out.print(prompt);
             String s = scanner.next();
             if (s.equalsIgnoreCase("done")) return s;
-            if (s.length() == length && s.matches("[01]+")) return s;
+            if (s.length() == length && s.matches("[01]+")) {
+                // For RS and JK flip-flops, schedule a reset after 10 seconds
+                if (flipFlopType == 1 || flipFlopType == 3) {
+                    currentInput.set(s);
+                    System.out.println("Input will reset to 0 after 10 seconds...");
+                    
+                    // Cancel any existing timer tasks
+                    timer.cancel();
+                    timer = new Timer();
+                    
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            String resetInput = "0".repeat(length);
+                            currentInput.set(resetInput);
+                            System.out.println("\nInput has been reset to: " + resetInput);
+                            
+                            // Get the last next state to use as present state for reset
+                            String lastNextState = nextStates.get(nextStates.size() - 1);
+                            
+                            // Add the reset state as a new row
+                            presentStates.add(lastNextState);
+                            flipFlopInputs.add(resetInput);
+                            
+                            // Calculate and add the next state for the reset input
+                            String newNextState = calcNextState(flipFlopType, lastNextState, resetInput, length / (flipFlopType == 1 || flipFlopType == 3 ? 2 : 1));
+                            nextStates.add(newNextState);
+                            
+                            // Print the updated table
+                            System.out.println("\nUpdated State Table after reset:");
+                            printTable(flipFlopType, length / (flipFlopType == 1 || flipFlopType == 3 ? 2 : 1));
+                            System.out.print("Input your flipflop inputs (or done to exit): ");
+                        }
+                    }, 10000);
+                }
+                return s;
+            }
             System.out.println("Invalid input. Please enter exactly " + length + " bits (0 or 1). Try again.");
         }
     }
@@ -255,7 +299,7 @@ public class Main {
         nextHeader.append(" ".repeat(stateColWidth - nextHeader.length()));
 
         if (flipFlopType == 1) { // RS
-            for (int i = numVars - 1; i >= 0; i--) inputHeader.append(String.format("R%d S%d ", i, i));
+            for (int i = numVars - 1; i >= 0; i--) inputHeader.append(String.format("S%d R%d ", i, i));
         } else if (flipFlopType == 2) { // D
             for (int i = numVars - 1; i >= 0; i--) inputHeader.append(String.format("D%d ", i));
         } else if (flipFlopType == 3) { // JK
